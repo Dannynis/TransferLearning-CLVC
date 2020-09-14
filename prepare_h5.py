@@ -17,7 +17,7 @@ def frame_inference(wavpath, model, use_cuda=True, pad_zero=False, sig=None):
         mfccs, _, _ = get_mfcc_features(wavpath, pad_zero) # (t, n_mfcc)
     else:
         mfccs = MFCC_Model(torch.FloatTensor(sig/32768.0).unsqueeze(0)).squeeze(0).transpose(0, 1) # (t, n_mfcc)
-    mfccs = (mfccs-mean)/std
+    mfccs = (mfccs-mfccs.mean())/mfccs.std()
     input_x = mfccs.as_strided(size=[mfccs.shape[0]-leftpad-rightpad, n_mfcc*(leftpad+rightpad+1)], stride=[n_mfcc, 1])
     if use_cuda:
         model = model.cuda()
@@ -30,7 +30,7 @@ def frame_inference(wavpath, model, use_cuda=True, pad_zero=False, sig=None):
 
 
 def create_vcc_audio_h5(wav_root_path="vcc2020_training", h5_audio_path="VCC_audio.h5"):
-    spks = ['SEF1', 'SEF2', 'SEM1', 'SEM2', 'TEF1', 'TEF2', 'TEM1', 'TEM2', 'TFF1', 'TFM1', 'TGF1', 'TGM1', 'TMF1', 'TMM1']
+    spks = ['gaga','trump']
     with h5py.File(h5_audio_path, "w") as h5:
         for i, spk in tqdm(enumerate(spks)):
             h5.create_group(str(i))
@@ -71,17 +71,17 @@ def create_vcc_spk_h5(config_path="config_24k.json", h5_audio_path="VCC_audio.h5
         mel = np.log10(np.dot(mel_basis, np.abs(y) ** 2) + 1e-6)
         return mel
 
-    model = torch.jit.load(os.path.join("ppg", "trace512_77_correct1_epoch-352_feature.pth"))
+    model = torch.jit.load(os.path.join("ppg", "trace512_uni_77_epoch-142_feature.pth"))
     model = model.cuda().eval() if use_cuda else model.cpu().eval()
 
-    model_ppg = torch.jit.load(os.path.join("ppg", "trace512_77_correct1_epoch-352.pth"))
+    model_ppg = torch.jit.load(os.path.join("ppg", "ttrace512_uni_77_epoch-142.pth"))
     model_ppg = model_ppg.cuda().eval() if use_cuda else model_ppg.cpu().eval()
 
     min_audio_seconds = 10
     num_spk_dvecs = 30
     h5_audio = h5py.File(h5_audio_path, "r")
     with h5py.File(h5_feature_path, "w") as h5:
-        for i in tqdm(range(14)):
+        for i in tqdm(range(2)):
             audio_24k = h5_audio[str(i)]["24k"][:]/MAX_WAV_VALUE
             audio = h5_audio[str(i)]["16k"][:]/MAX_WAV_VALUE
 

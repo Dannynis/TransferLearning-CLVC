@@ -94,14 +94,14 @@ def prepare_dataloaders(hparams):
     val_dataset = PPG2MEL_Dataset_spk(hparams.h5_feature_path, max_frames=800, random=False, ppg_dim=hparams.n_symbols)
 
     train_loader = DataLoader(dataset, num_workers=min(hparams.batch_size//2, 8),
-                              sampler=RandomSampler(0, 14),
+                              sampler=RandomSampler(0, 2),
                               batch_size=hparams.batch_size,
                               pin_memory=True,
                               drop_last=False,
                               collate_fn=pad_collate_spk)
 
     val_loader = DataLoader(val_dataset, num_workers=8,
-                            sampler=RandomSampler(0, 14),
+                            sampler=RandomSampler(0, 2),
                             batch_size=16,
                             pin_memory=True,
                             drop_last=False,
